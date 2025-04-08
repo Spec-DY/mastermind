@@ -1,131 +1,218 @@
 import { createRoot } from "react-dom/client";
 import { usePartySocket } from "partysocket/react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter,
   Routes,
   Route,
   Navigate,
   useParams,
+  useNavigate,
+  Link,
 } from "react-router";
 import { nanoid } from "nanoid";
 
-import { names, type ChatMessage, type Message } from "../shared";
+import { names, type Message, type Player, type GameState } from "../shared";
 
-function App() {
-  const [name] = useState(names[Math.floor(Math.random() * names.length)]);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const { room } = useParams();
+// Home screen to create or join a game
+function Home() {
+  const [playerName, setPlayerName] = useState(
+    names[Math.floor(Math.random() * names.length)]
+  );
+  const [roomId, setRoomId] = useState("");
+  const navigate = useNavigate();
 
-  const socket = usePartySocket({
-    party: "chat",
-    room,
-    onMessage: (evt) => {
-      const message = JSON.parse(evt.data as string) as Message;
-      if (message.type === "add") {
-        const foundIndex = messages.findIndex((m) => m.id === message.id);
-        if (foundIndex === -1) {
-          // probably someone else who added a message
-          setMessages((messages) => [
-            ...messages,
-            {
-              id: message.id,
-              content: message.content,
-              user: message.user,
-              role: message.role,
-            },
-          ]);
-        } else {
-          // this usually means we ourselves added a message
-          // and it was broadcasted back
-          // so let's replace the message with the new message
-          setMessages((messages) => {
-            return messages
-              .slice(0, foundIndex)
-              .concat({
-                id: message.id,
-                content: message.content,
-                user: message.user,
-                role: message.role,
-              })
-              .concat(messages.slice(foundIndex + 1));
-          });
-        }
-      } else if (message.type === "update") {
-        setMessages((messages) =>
-          messages.map((m) =>
-            m.id === message.id
-              ? {
-                  id: message.id,
-                  content: message.content,
-                  user: message.user,
-                  role: message.role,
-                }
-              : m,
-          ),
-        );
-      } else {
-        setMessages(message.messages);
-      }
-    },
-  });
+  const createRoom = () => {
+    const newRoomId = nanoid(6);
+    navigate(`/room/${newRoomId}`);
+  };
+
+  const joinRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (roomId.trim()) {
+      navigate(`/room/${roomId}`);
+    }
+  };
 
   return (
-    <div className="chat container">
-      {messages.map((message) => (
-        <div key={message.id} className="row message">
-          <div className="two columns user">{message.user}</div>
-          <div className="ten columns">{message.content}</div>
+    <div className="container">
+      <h1>Mastermind Game</h1>
+      <div className="row">
+        <div className="six columns">
+          <h3>Your Name</h3>
+          <input
+            type="text"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.target.value)}
+            className="u-full-width"
+          />
         </div>
-      ))}
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const content = e.currentTarget.elements.namedItem(
-            "content",
-          ) as HTMLInputElement;
-          const chatMessage: ChatMessage = {
-            id: nanoid(8),
-            content: content.value,
-            user: name,
-            role: "user",
-          };
-          setMessages((messages) => [...messages, chatMessage]);
-          // we could broadcast the message here
-
-          socket.send(
-            JSON.stringify({
-              type: "add",
-              ...chatMessage,
-            } satisfies Message),
-          );
-
-          content.value = "";
-        }}
-      >
-        <input
-          type="text"
-          name="content"
-          className="ten columns my-input-text"
-          placeholder={`Hello ${name}! Type a message...`}
-          autoComplete="off"
-        />
-        <button type="submit" className="send-message two columns">
-          Send
-        </button>
-      </form>
+      </div>
+      <div className="row">
+        <div className="six columns">
+          <h3>Create New Room</h3>
+          <button onClick={createRoom} className="button-primary u-full-width">
+            Create Room
+          </button>
+        </div>
+        <div className="six columns">
+          <h3>Join Room</h3>
+          <form onSubmit={joinRoom}>
+            <input
+              type="text"
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+              placeholder="Enter Room ID"
+              className="u-full-width"
+            />
+            <button type="submit" className="button u-full-width">
+              Join Room
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }
 
+// Main game room component
+function GameRoom() {
+  const { roomId = "" } = useParams<{ roomId: string }>();
+  const [playerId] = useState(() => nanoid(8));
+  const [playerName] = useState(
+    names[Math.floor(Math.random() * names.length)]
+  );
+  const [gameState, setGameState] = useState<GameState>({
+    status: "waiting",
+    guesses: [],
+  });
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const navigate = useNavigate();
+
+  const socket = usePartySocket({
+    party: "chat",
+    room: roomId,
+    onOpen: () => {
+      setIsConnected(true);
+      // When connected, attempt to join or create the room
+      socket.send(
+        JSON.stringify({
+          type: "join_room",
+          roomId,
+          playerId,
+          playerName,
+        } satisfies Message)
+      );
+    },
+    onClose: () => {
+      setIsConnected(false);
+    },
+    onMessage: (evt) => {
+      const message = JSON.parse(evt.data as string) as Message;
+
+      if (message.type === "room_joined") {
+        setGameState(message.gameState);
+        setPlayers(message.players);
+      } else if (message.type === "game_update") {
+        setGameState(message.gameState);
+      } else if (message.type === "player_left") {
+        setPlayers((prev) => prev.filter((p) => p.id !== message.playerId));
+      }
+    },
+  });
+
+  // Handle leaving room manually
+  const leaveRoom = () => {
+    if (isConnected) {
+      socket.send(
+        JSON.stringify({
+          type: "leave_room",
+          roomId,
+          playerId,
+        } satisfies Message)
+      );
+    }
+    navigate("/");
+  };
+
+  // Handle page unload events (closing tab, refreshing, etc)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (isConnected) {
+        socket.send(
+          JSON.stringify({
+            type: "leave_room",
+            roomId,
+            playerId,
+          } satisfies Message)
+        );
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup function that runs when component unmounts
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      handleBeforeUnload(); // Also execute when component unmounts
+    };
+  }, [isConnected, roomId, playerId, socket]);
+
+  // If not connected, show loading state
+  if (!isConnected) {
+    return <div className="container">Connecting to room...</div>;
+  }
+
+  return (
+    <div className="container">
+      <div className="row">
+        <div className="twelve columns">
+          <h2>Room: {roomId}</h2>
+          <button onClick={() => window.navigator.clipboard.writeText(roomId)}>
+            Copy Room ID
+          </button>
+          <button onClick={leaveRoom} className="button">
+            Leave Room
+          </button>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="twelve columns">
+          <h3>Players ({players.length}/2)</h3>
+          <ul>
+            {players.map((player) => (
+              <li key={player.id}>
+                {player.name} {player.isHost ? "(Host)" : ""}
+                {player.id === playerId ? " (You)" : ""}
+              </li>
+            ))}
+          </ul>
+
+          <h3>Game Status: {gameState.status}</h3>
+          {gameState.status === "waiting" &&
+            players.some((p) => p.id === playerId && p.isHost) && (
+              <button className="button-primary">Start Game</button>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main App component
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/room/:roomId" element={<GameRoom />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/" element={<Navigate to={`/${nanoid()}`} />} />
-      <Route path="/:room" element={<App />} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  </BrowserRouter>,
-);
+createRoot(document.getElementById("root")!).render(<App />);
