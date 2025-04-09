@@ -32,7 +32,7 @@
   "scripts": {
     "check": "tsc --project src/client && tsc --project src/server && wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --ip 0.0.0.0",
     "types": "wrangler types ./src/server/worker-configuration.d.ts"
   }
 }

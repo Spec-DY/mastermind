@@ -7,7 +7,7 @@ import {
 
 import type { Message, Room, Player, GameState } from "../shared";
 
-export class Chat extends Server<Env> {
+export class Gameroom extends Server<Env> {
   static options = { hibernate: true };
 
   rooms = new Map<string, Room>();

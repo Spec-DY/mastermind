@@ -91,7 +91,7 @@ function GameRoom() {
   const navigate = useNavigate();
 
   const socket = usePartySocket({
-    party: "chat",
+    party: "gameroom",
     room: roomId,
     onOpen: () => {
       setIsConnected(true);

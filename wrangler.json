@@ -4,7 +4,7 @@
   "name": "mastermind",
   "migrations": [
     {
-      "new_sqlite_classes": ["Chat"],
+      "new_sqlite_classes": ["Gameroom"],
       "tag": "v1"
     }
   ],
@@ -19,8 +19,8 @@
   "durable_objects": {
     "bindings": [
       {
-        "class_name": "Chat",
-        "name": "Chat"
+        "class_name": "Gameroom",
+        "name": "Gameroom"
       }
     ]
   },
