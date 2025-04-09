@@ -221,9 +221,34 @@ export class Gameroom extends Server<Env> {
 
 export default {
   async fetch(request, env) {
-    return (
-      (await routePartykitRequest(request, { ...env })) ||
-      env.ASSETS.fetch(request)
-    );
+    // 尝试路由到PartyKit请求处理
+    const partyKitResponse = await routePartykitRequest(request, { ...env });
+    if (partyKitResponse) return partyKitResponse;
+
+    // 处理API请求
+    const url = new URL(request.url);
+
+    if (url.pathname === "/api/info") {
+      return new Response(
+        JSON.stringify({
+          status: "ok",
+          message: "Mastermind API Server",
+          version: "0.1.1",
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    // 返回默认响应
+    return new Response("Mastermind Server - API Only", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain",
+      },
+    });
   },
 } satisfies ExportedHandler<Env>;
