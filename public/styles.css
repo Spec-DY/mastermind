@@ -7,45 +7,48 @@ html {
   flex-direction: column;
 }
 
-.chat {
-  padding-top: 40px;
-}
-
 #root {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  overflow-y: auto;
   height: 100%;
-  /* padding: 10px; */
+  padding: 20px;
 }
 
-.message {
+/* Game room styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1,
+h2,
+h3 {
+  margin-bottom: 20px;
+}
+
+button {
+  margin-right: 10px;
   margin-bottom: 10px;
 }
 
-.message .user {
-  font-weight: bold;
-  text-align: right;
+ul {
+  list-style-type: none;
+  padding-left: 0;
 }
 
-.message .remove {
-  position: absolute;
-  width: 22px;
-  height: 20px;
-  left: -60px;
-  /* display: "block", */
-  display: none;
-  padding: 0;
-  line-height: 18px;
-  border: "none";
+li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
 }
 
-.send-message {
-  padding: 0;
+input {
+  margin-bottom: 15px;
 }
 
-.my-input-text::placeholder {
-  color: #ccc;
+.room-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 }

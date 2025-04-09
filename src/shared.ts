@@ -1,29 +1,61 @@
-export type ChatMessage = {
-  id: string;
-  content: string;
-  user: string;
-  role: "user" | "assistant";
-};
-
 export type Message =
   | {
-      type: "add";
-      id: string;
-      content: string;
-      user: string;
-      role: "user" | "assistant";
+      type: "create_room";
+      roomId: string;
+      hostId: string;
+      hostName: string;
     }
   | {
-      type: "update";
-      id: string;
-      content: string;
-      user: string;
-      role: "user" | "assistant";
+      type: "join_room";
+      roomId: string;
+      playerId: string;
+      playerName: string;
     }
   | {
-      type: "all";
-      messages: ChatMessage[];
+      type: "room_joined";
+      roomId: string;
+      gameState: GameState;
+      players: Player[];
+    }
+  | {
+      type: "game_update";
+      roomId: string;
+      gameState: GameState;
+    }
+  | {
+      type: "player_left";
+      roomId: string;
+      playerId: string;
+    }
+  | {
+      type: "leave_room";
+      roomId: string;
+      playerId: string;
     };
+
+export type Player = {
+  id: string;
+  name: string;
+  isHost: boolean;
+};
+
+export type GameState = {
+  status: "waiting" | "playing" | "finished";
+  currentTurn?: string; // player ID of whose turn it is
+  secretCode?: number[]; // Only available to code creator
+  guesses: Array<{
+    playerId: string;
+    guess: number[];
+    feedback: Array<"correct" | "misplaced" | "incorrect">;
+  }>;
+  winner?: string; // player ID of winner, if any
+};
+
+export type Room = {
+  id: string;
+  players: Player[];
+  gameState: GameState;
+};
 
 export const names = [
   "Alice",
