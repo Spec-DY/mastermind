@@ -1,0 +1,11 @@
+{
+	"files.associations": {
+		"wrangler.json": "jsonc"
+	},
+	"github.copilot.enable": {
+		"*": true,
+		"plaintext": false,
+		"markdown": false,
+		"scminput": false
+	}
+}
