@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
+import webSocketService from "@/service/webSocketService";
 
 export default function Home() {
   const NAMES = [
@@ -40,61 +41,56 @@ export default function Home() {
     return result;
   };
 
-  const handleJoin = () => {
-    const finalUsername = username || getRandomName();
-    if (!username) {
-      setUsername(finalUsername);
-    }
-    if (!roomId) {
-      setJoinErrorMsg("Please Enter RoomID or Create Room");
-      return;
-    }
-
-    console.log("user name is: " + finalUsername);
-    console.log("room id is: " + roomId);
-    connectWebSocket(roomId, finalUsername);
-  };
-
-  const handleCreate = () => {
+  const connectToRoom = async (
+    roomIdToUse: string | null,
+    isJoinRoom: boolean = false
+  ) => {
+    // must have username no matter what
     const finalUsername = username || getRandomName();
     if (!username) {
       setUsername(finalUsername);
     }
 
-    console.log("user name is: " + finalUsername);
-    const newRoomId = generateShortId();
-    setRoomId(newRoomId);
+    let finalRoomId;
 
-    connectWebSocket(newRoomId, finalUsername);
-  };
-
-  //---------------Web Socket Connect--------------//
-  const connectWebSocket = (roomId: string, username: string) => {
-    setIsConnecting(true);
-
-    if (socket) {
-      socket.close();
+    // join room must have room id
+    if (isJoinRoom) {
+      if (!roomIdToUse) {
+        setJoinErrorMsg("Please Enter Room ID");
+        return;
+      } else {
+        finalRoomId = roomIdToUse;
+      }
+    } else {
+      finalRoomId = generateShortId();
+      setRoomId(finalRoomId);
     }
 
     try {
-      const newSocket = new WebSocket(
-        `ws://localhost:8787/api/mastermind?gameId=${roomId}` ||
-          `${process.env.WORKER_WS_UR}?gameId=${roomId}`
+      await webSocketService.connect(
+        finalRoomId,
+        finalUsername,
+        router,
+        setIsConnecting
       );
 
-      newSocket.onopen = () => {
-        console.log("WS connected");
-        router.push(`/room/${roomId}/`);
-      };
-
-      newSocket.onclose = () => {
-        console.log("Disconnecting WS");
-        setIsConnecting(false);
-      };
+      // send join
+      webSocketService.sendMessage({
+        type: "join",
+        playerName: finalUsername,
+      });
     } catch (error) {
-      alert("Failed connect to server");
-      setIsConnecting(false);
+      console.error("Connection failed:", error);
+      setJoinErrorMsg("Failed to join room. Please check Room ID.");
     }
+  };
+
+  const handleJoin = () => {
+    connectToRoom(roomId, true);
+  };
+
+  const handleCreate = () => {
+    connectToRoom(null, false);
   };
 
   return (

@@ -3,6 +3,7 @@
 import React from "react";
 import { useUser } from "@/context/UserContext";
 import { useParams } from "next/navigation";
+import RoundBar from "@/components/RoundBar";
 
 export default function page() {
   const { username, setUsername } = useUser();
@@ -15,6 +16,7 @@ export default function page() {
   return (
     <div className="h-screen flex items-center justify-center">
       You logged in as {username} room id is {RoomId}
+      <RoundBar />
     </div>
   );
 }
