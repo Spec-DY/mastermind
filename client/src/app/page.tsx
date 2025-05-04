@@ -1,42 +1,99 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/context/UserContext";
 
 export default function Home() {
   const NAMES = [
-    "Alice",
-    "Bob",
-    "Charlie",
-    "David",
-    "bob",
-    "Frank",
-    "Grace",
-    "bOb",
-    "boB",
-    "Judy",
+    "MilkBanana",
+    "CoconutCakie",
+    "Beaverrage",
+    "AngryFugu",
+    "SmartTurtle",
+    "OhPotato",
+    "PlusProUltra",
   ];
+
+  const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+  const router = useRouter();
+  const { username, setUsername } = useUser();
+
   const [roomId, setRoomId] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
   const [joinErrorMsg, setJoinErrorMsg] = useState<string | null>(null);
+
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const getRandomName = () => {
     let randomIndex = Math.floor(Math.random() * NAMES.length);
     return NAMES[randomIndex];
   };
 
+  const generateShortId = (length = 4) => {
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length)
+      );
+    }
+    return result;
+  };
+
   const handleJoin = () => {
+    const finalUsername = username || getRandomName();
     if (!username) {
-      setUsername(getRandomName());
+      setUsername(finalUsername);
     }
     if (!roomId) {
       setJoinErrorMsg("Please Enter RoomID or Create Room");
+      return;
     }
 
-    navigator;
+    console.log("user name is: " + finalUsername);
+    console.log("room id is: " + roomId);
+    connectWebSocket(roomId, finalUsername);
   };
 
   const handleCreate = () => {
+    const finalUsername = username || getRandomName();
     if (!username) {
-      setUsername(getRandomName());
+      setUsername(finalUsername);
+    }
+
+    console.log("user name is: " + finalUsername);
+    const newRoomId = generateShortId();
+    setRoomId(newRoomId);
+
+    connectWebSocket(newRoomId, finalUsername);
+  };
+
+  //---------------Web Socket Connect--------------//
+  const connectWebSocket = (roomId: string, username: string) => {
+    setIsConnecting(true);
+
+    if (socket) {
+      socket.close();
+    }
+
+    try {
+      const newSocket = new WebSocket(
+        `ws://localhost:8787/api/mastermind?gameId=${roomId}` ||
+          `${process.env.WORKER_WS_UR}?gameId=${roomId}`
+      );
+
+      newSocket.onopen = () => {
+        console.log("WS connected");
+        router.push(`/room/${roomId}/`);
+      };
+
+      newSocket.onclose = () => {
+        console.log("Disconnecting WS");
+        setIsConnecting(false);
+      };
+    } catch (error) {
+      alert("Failed connect to server");
+      setIsConnecting(false);
     }
   };
 
@@ -60,6 +117,7 @@ export default function Home() {
             <input
               type="text"
               id="username"
+              value={username || ""}
               required
               onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-gray-700 border border-gray-600 rounded-md py-3 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -80,14 +138,36 @@ export default function Home() {
                 type="text"
                 id="roomId"
                 onChange={(e) => setRoomId(e.target.value)}
-                className="flex-1 bg-gray-700 border border-gray-600 rounded-md py-3 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 w-32 bg-gray-700 border border-gray-600 rounded-md py-3 px-4 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={joinErrorMsg ? joinErrorMsg : "Enter room ID"}
               />
               <button
                 onClick={handleJoin}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isConnecting}
+                className=" bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Join
+                {isConnecting ? (
+                  <>
+                    <svg className="animate-spin h-6" viewBox="0 0 24 24">
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  </>
+                ) : (
+                  "Join"
+                )}
               </button>
             </div>
           </div>
@@ -96,9 +176,31 @@ export default function Home() {
           <div className="pt-2">
             <button
               onClick={handleCreate}
-              className="w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isConnecting}
+              className="flex items-center justify-center w-full bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-md transition-all focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Room
+              {isConnecting ? (
+                <>
+                  <svg className="animate-spin h-6" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                </>
+              ) : (
+                "Create Room"
+              )}
             </button>
           </div>
         </div>

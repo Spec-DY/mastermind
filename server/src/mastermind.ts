@@ -17,10 +17,9 @@ type GameState = {
 };
 
 type Player = {
+	// name must be unique
 	name: string;
-	// note id is super important here
-	// it's the only identification for each player
-	// name can be duplicated
+	// id will be auto generated
 	id: string;
 };
 
