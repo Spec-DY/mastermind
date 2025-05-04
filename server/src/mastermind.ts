@@ -113,7 +113,7 @@ export class MastermindGame extends DurableObject {
 
 			switch (data.type) {
 				case 'join':
-					await this.handlePlayerJoin(ws, data.playerName, data.playerId);
+					await this.handlePlayerJoin(ws, data.playerName);
 					break;
 				case 'reset':
 					await this.resetGame();
@@ -159,21 +159,32 @@ export class MastermindGame extends DurableObject {
 	}
 
 	// Game logic methods
-	private async handlePlayerJoin(ws: WebSocket, playerName: string, playerId: string) {
-		// record relationship of playerID and ws
-		this.wsToPlayerMap.set(ws, playerId);
-
-		if (!playerName || !playerId) {
-			console.log('player name or ID is missing');
+	private async handlePlayerJoin(ws: WebSocket, playerName: string) {
+		if (!playerName) {
+			console.log('player name is missing');
 			return;
 		}
-
-		// TODO allow user to rejoin in the middle of the game if they have the same ID
 
 		if (this.gameState.gameStatus !== 'waiting') {
 			console.log(`game is ${this.gameState.gameStatus} cant join yet`);
 			return;
 		}
+
+		const existingNameIndex = this.gameState.players.findIndex((p) => p.name === playerName);
+		// if player name already exists
+		if (existingNameIndex !== -1) {
+			console.log(`player with name ${playerName} already joined`);
+			return;
+		}
+
+		const playerId = crypto.randomUUID();
+		// send back playerId to client
+		ws.send(JSON.stringify({ type: 'player_id', playerId }));
+
+		// record relationship of playerID and ws
+		this.wsToPlayerMap.set(ws, playerId);
+
+		// TODO allow user to rejoin in the middle of the game if they have the same ID
 
 		// Check if player is already in the game
 		const existingPlayerIndex = this.gameState.players.findIndex((p) => p.id === playerId);
