@@ -6,6 +6,8 @@ class WebSocketService {
   private socket: WebSocket | null = null;
   private isConnected: boolean = false;
   private messageCallbacks: ((data: any) => void)[] = [];
+  // Add cache for latest game state
+  private latestGameState: any = null;
 
   // Connect to WebSocket server and return a Promise
   public connect(
@@ -45,6 +47,12 @@ class WebSocketService {
           console.log("Message received:", event.data);
           try {
             const data = JSON.parse(event.data);
+
+            // Cache game state when received
+            if (data && data.type === "game_state") {
+              this.latestGameState = data;
+            }
+
             this.messageCallbacks.forEach((callback) => callback(data));
           } catch (error) {
             console.error("Failed to parse message:", error);
@@ -94,8 +102,20 @@ class WebSocketService {
   public onMessage(callback: (data: any) => void): WebSocketService {
     if (typeof callback === "function") {
       this.messageCallbacks.push(callback);
+
+      // Send cached game state to new subscribers
+      if (this.latestGameState) {
+        setTimeout(() => {
+          callback(this.latestGameState);
+        }, 0);
+      }
     }
     return this;
+  }
+
+  // Get latest game state
+  public getLatestGameState(): any {
+    return this.latestGameState;
   }
 
   // Disconnect
