@@ -63,10 +63,6 @@ export default function GameStateCard() {
     });
 
     // Request game state update if needed
-    if (isConnected && (!gameState.players || gameState.players.length === 0)) {
-      console.log("WebSocket connected, requesting game state");
-      websocketService.sendMessage({ type: "request_game_state" });
-    }
 
     // Cleanup work when component unmounts
     return () => {
@@ -152,8 +148,9 @@ export default function GameStateCard() {
     websocketService.sendMessage({ type: "request_game_state" });
   };
 
-  // Debug: log current state before rendering
-  console.log("Rendering GameStateCard with players:", gameState.players);
+  const handleStartGame = () => {
+    websocketService.sendMessage({ type: "start_game" });
+  };
 
   return (
     <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md border border-gray-700">
@@ -208,9 +205,7 @@ export default function GameStateCard() {
                   All players joined! Ready to start the game.
                 </div>
                 <button
-                  onClick={() =>
-                    websocketService.sendMessage({ type: "start_game" })
-                  }
+                  onClick={handleStartGame}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   Start Game
@@ -232,9 +227,6 @@ export default function GameStateCard() {
             <div>
               <div className="text-white font-medium">
                 {getCurrentPlayer()?.name}
-              </div>
-              <div className="text-gray-400 text-sm">
-                {getCurrentPlayer()?.id.substring(0, 8)}...
               </div>
             </div>
           </div>
