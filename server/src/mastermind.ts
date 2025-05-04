@@ -286,6 +286,11 @@ export class MastermindGame extends DurableObject {
 			playerId: this.gameState.players[0].id,
 		});
 
+		this.broadcastMessage({
+			type: 'game_state',
+			state: this.gameState,
+		});
+
 		// Save game state
 		await this.saveGameState();
 	}
