@@ -422,13 +422,6 @@ export class MastermindGame extends DurableObject {
 			return { correctPostionAndColor: 0, correctColors: 0 };
 		}
 
-		// check dupulicate colors in guess
-
-		// correct
-		if (guessCopy === secretCode) {
-			return { correctPostionAndColor: MAX_CODE_LENGTH, correctColors: 0 };
-		}
-
 		// First pass: Count full correct (correct color and position)
 		for (let i = 0; i < secretCode.length; i++) {
 			if (guessCopy[i] === secretCode[i]) {
