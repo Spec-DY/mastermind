@@ -54,7 +54,7 @@ type GameMessage =
 
 // sent by client
 type ClientMessage =
-	| { type: 'join'; playerName: string; playerId: string }
+	| { type: 'join'; playerName: string }
 	| { type: 'reset' }
 	| { type: 'start_game' }
 	| { type: 'submit_guess'; guess: ColorPeg[] };

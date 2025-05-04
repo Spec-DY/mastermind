@@ -30,6 +30,8 @@ export default function Home() {
     if (!roomId) {
       setJoinErrorMsg("Please Enter RoomID or Create Room");
     }
+
+    navigator;
   };
 
   const handleCreate = () => {
