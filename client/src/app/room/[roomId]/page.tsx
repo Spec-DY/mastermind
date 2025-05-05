@@ -4,6 +4,8 @@ import React from "react";
 import { useUser } from "@/context/UserContext";
 import { useParams } from "next/navigation";
 import GameStateCard from "@/components/GameStateCard";
+import GameBoard from "@/components/GameBoard";
+import ResetButton from "@/components/ResetButton";
 
 export default function RoomPage() {
   const { username } = useUser();
@@ -17,8 +19,10 @@ export default function RoomPage() {
         <div className="flex justify-between items-center mb-8 bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700">
           <div>
             <h1 className="text-2xl font-bold text-white">Mastermind</h1>
+
             <p className="text-gray-400">Room ID: {roomId}</p>
           </div>
+          <ResetButton />
           <div className="bg-blue-600 px-4 py-2 rounded-lg">
             <span className="text-white font-medium">
               Playing as: {username}
@@ -34,11 +38,9 @@ export default function RoomPage() {
           </div>
 
           {/* Game board area - can be implemented later */}
-          <div className="md:w-2/3 bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-700">
-            <h2 className="text-2xl font-bold text-white mb-6">Game Board</h2>
-            <div className="flex items-center justify-center h-64 bg-gray-700 rounded-lg">
-              <p className="text-gray-400">Game board will be displayed here</p>
-            </div>
+
+          <div className="md:w-2/3">
+            <GameBoard />
           </div>
         </div>
       </div>

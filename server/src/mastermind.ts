@@ -47,7 +47,7 @@ type GameMessage =
 	| { type: 'guess_submitted'; guess: GuessRecord }
 	| { type: 'game_won'; winner: Player; secretCode: ColorPeg[] }
 	| { type: 'game_lost'; secretCode: ColorPeg[] }
-	| { type: 'player_turn'; playerId: string }
+	| { type: 'player_turn'; playerName: string; playerId: string }
 	| { type: 'game_state'; state: GameState }
 	| { type: 'player_list'; players: Player[] };
 
@@ -283,6 +283,7 @@ export class MastermindGame extends DurableObject {
 		// Broadcast whose turn it is
 		this.broadcastMessage({
 			type: 'player_turn',
+			playerName: this.gameState.players[0].name,
 			playerId: this.gameState.players[0].id,
 		});
 
@@ -369,6 +370,7 @@ export class MastermindGame extends DurableObject {
 				// Broadcast whose turn it is now
 				this.broadcastMessage({
 					type: 'player_turn',
+					playerName: this.gameState.players[this.gameState.currentPlayerIndex].name,
 					playerId: this.gameState.players[this.gameState.currentPlayerIndex].id,
 				});
 				console.log(`player ${this.gameState.players[this.gameState.currentPlayerIndex].name}'s turn now`);
