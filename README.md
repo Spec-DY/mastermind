@@ -1,4 +1,4 @@
-# An Online Multiplayer Mastermind Game
+# Online Multiplayer Mastermind Game
 
 ### Based on websocket and cloudflare durable objects
 ### [Play Now](mastermind.dylanjin.com)
