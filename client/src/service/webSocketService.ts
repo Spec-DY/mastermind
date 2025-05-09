@@ -42,11 +42,15 @@ class WebSocketService {
 
         newSocket.onmessage = (event: MessageEvent): void => {
           if (event.data instanceof Blob && event.data.size === 0) {
+            //if only NODE_ENV is development
+
             console.log("Heartbeat received");
+
             return;
           }
-
-          console.log("Message received:", event.data);
+          if (process.env.NODE_ENV === "development") {
+            console.log("Message received:", event.data);
+          }
           try {
             const data = JSON.parse(event.data);
 

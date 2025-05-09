@@ -39,8 +39,6 @@ export default function GameStateCard() {
     useState<string>("initializing");
 
   useEffect(() => {
-    console.log("GameStateCard mounted, setting up WebSocket listener");
-
     // Check WebSocket connection
     const isConnected = websocketService.getConnectionState();
     setConnectionStatus(isConnected ? "connected" : "disconnected");
@@ -52,7 +50,9 @@ export default function GameStateCard() {
     // Check for cached game state
     const cachedGameState = websocketService.getLatestGameState();
     if (cachedGameState && cachedGameState.state) {
-      console.log("Using cached game state:", cachedGameState);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Using cached game state:", cachedGameState);
+      }
       setGameState(cachedGameState.state);
     }
 
@@ -71,19 +71,22 @@ export default function GameStateCard() {
   }, []);
 
   const handleWebSocketMessage = (data: any) => {
-    console.log("Received WebSocket message:", data);
-
     // Handle different message types
     if (data && data.type === "game_state") {
       const newGameState = data.state as GameState;
-      console.log("Game state updated:", newGameState);
-      console.log("Players in game state:", newGameState.players);
+      // only display in NODE_ENV=development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Game state updated:", newGameState);
+        console.log("Players in game state:", newGameState.players);
+      }
 
       setGameState(newGameState);
     }
     // Handle player_joined messages directly
     else if (data && data.type === "player_joined" && data.player) {
-      console.log("Player joined:", data.player);
+      if (process.env.NODE_ENV === "development") {
+        console.log("Player joined:", data.player);
+      }
 
       // Update the players array directly
       setGameState((prevState) => {
@@ -94,7 +97,9 @@ export default function GameStateCard() {
 
         if (!playerExists) {
           const updatedPlayers = [...(prevState.players || []), data.player];
-          console.log("Updated players array:", updatedPlayers);
+          if (process.env.NODE_ENV === "development") {
+            console.log("Updated players array:", updatedPlayers);
+          }
 
           return {
             ...prevState,
