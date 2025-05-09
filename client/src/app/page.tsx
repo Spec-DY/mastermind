@@ -26,7 +26,7 @@ export default function Home() {
   const [isConnecting, setIsConnecting] = useState(false);
 
   const getRandomName = () => {
-    let randomIndex = Math.floor(Math.random() * NAMES.length);
+    const randomIndex = Math.floor(Math.random() * NAMES.length);
     return NAMES[randomIndex];
   };
 
