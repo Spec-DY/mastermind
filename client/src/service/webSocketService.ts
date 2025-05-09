@@ -25,8 +25,9 @@ class WebSocketService {
     return new Promise<WebSocketService>((resolve, reject) => {
       try {
         const newSocket = new WebSocket(
-          `ws://localhost:8787/api/mastermind?gameId=${roomId}` ||
-            `${process.env.WORKER_WS_UR}?gameId=${roomId}`
+          process.env.NODE_ENV === "production" && process.env.WORKER_WS_URL
+            ? `${process.env.WORKER_WS_URL}?gameId=${roomId}`
+            : `ws://localhost:8787/api/mastermind?gameId=${roomId}`
         );
 
         newSocket.onopen = () => {

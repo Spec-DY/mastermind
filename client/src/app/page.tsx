@@ -23,7 +23,6 @@ export default function Home() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [joinErrorMsg, setJoinErrorMsg] = useState<string | null>(null);
 
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
   const getRandomName = () => {
