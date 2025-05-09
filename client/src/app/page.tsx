@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import webSocketService from "@/service/webSocketService";
@@ -24,6 +24,12 @@ export default function Home() {
   const [joinErrorMsg, setJoinErrorMsg] = useState<string | null>(null);
 
   const [isConnecting, setIsConnecting] = useState(false);
+
+  // console log NODE_ENV
+  useEffect(() => {
+    console.log("NODE_ENV:", process.env.NODE_ENV);
+    console.log("WORKER_WS_URL:", process.env.NEXT_PUBLIC_WORKER_WS_URL);
+  }, []);
 
   const getRandomName = () => {
     const randomIndex = Math.floor(Math.random() * NAMES.length);
