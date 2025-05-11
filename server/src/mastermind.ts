@@ -1,7 +1,7 @@
 import { DurableObject } from 'cloudflare:workers';
 import { WebSocketHeartbeat } from './heartbeat';
 
-const MAX_ROUNDS = 2;
+const MAX_ROUNDS = 7;
 const MAX_CODE_LENGTH = 4;
 const Colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink'];
 
