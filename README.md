@@ -8,5 +8,5 @@
 
 
 [How to play](https://www.youtube.com/watch?v=wsYPsrzCKiA) </br>
-[DeepWiki](https://deepwiki.com/Spec-DY/mastermind-game)
+[DeepWiki](https://deepwiki.com/Spec-DY/mastermind-multiplayer-game/1-overview)
 
